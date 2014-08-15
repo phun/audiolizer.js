@@ -1,22 +1,23 @@
 $(document).ready(function() {
-    var audiolizer = $("#canvas").audiolizer({
-        defaultAudioUrl: 'movements.mp3',
-        onStart: function() {
-            $('#playBtn').text('Pause');
-        },
-        onResume: function() {
-            $('#playBtn').text('Pause');
-        },
-        onPause: function() {
-            $('#playBtn').text('Resume');
-        },
-        onEnd: function() {
-            $('#playBtn').text('Play');
-        },
-        onLoad: function() {
-            $('#playBtn').text('Loading');
-        }
-    });
+    var $btn = $('#playBtn'),
+        audiolizer = $("#canvas").audiolizer({
+            defaultAudioUrl: 'movements.mp3',
+            onStart: function() {
+                $btn.text('Pause');
+            },
+            onResume: function() {
+                $btn.text('Pause');
+            },
+            onPause: function() {
+                $btn.text('Resume');
+            },
+            onEnded: function() {
+                $btn.text('Play');
+            },
+            onLoad: function() {
+                $btn.text('Loading');
+            }
+        });
 
     $('#playBtn').click(function() {
         audiolizer.playOrPause(); 

@@ -44,13 +44,13 @@ SOFTWARE.
 
             // Callback for when a song is starting  
             onStart: null,
-            // Callback for when a song is resumed from pause  
+            // Callback for when a song is resuming from pause  
             onResume: null,
-            // Callback for when a song is paused
+            // Callback for when a song is pausing
             onPause: null,
-            // Callback for when a song ends
-            onEnd: null,
-            // Callback for when a song is still being loaded
+            // Callback for when a song is ended
+            onEnded: null,
+            // Callback for when a song is loading
             onLoad: null
         }, options );
 
@@ -160,6 +160,16 @@ SOFTWARE.
             sourceNode.connect(context.destination);
             // Start playback, but make sure we stay in bound of the buffer.
             sourceNode.start(0, startOffset % audioBuffer.duration);
+
+            sourceNode.onended = function(e) {
+                state = STATE_STOP;
+                startOffset = 0;
+                startTime = 0;
+                if (settings.onEnded) {
+                    settings.onEnded(e);
+                }
+            };
+
             state = STATE_PLAY;
             if (settings.onResume) {
                 settings.onResume();
