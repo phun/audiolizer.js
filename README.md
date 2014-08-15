@@ -4,6 +4,7 @@ by Phu Nguyen (me@phu.bar)
 
 Circular Audio Visualizer As Made Popular by EDM Channels on Youtube
 
+![Example Image of Audiolizer](assets/example.gif)
 
 # Installation
 Import jQuery and the library in your html (assuming lib is in `js/`).
