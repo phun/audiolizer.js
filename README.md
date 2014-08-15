@@ -13,11 +13,11 @@ Import jQuery and the library in your html (assuming lib is in `js/`).
 <script src="js/jquery.audiolizer.js"></script>
 ```
 # Usage
-1. Make sure you have a canvas in the DOM. For example:
+Make sure you have a canvas in the DOM. For example
 ```
 <canvas id="canvas" width="500" height="500"></canvas>
 ```
-2. In your javascript, initialize the audiolizer using jQuery. You can also pass in optional parameters.
+In your javascript, initialize the audiolizer using jQuery. You can also pass in optional parameters.
 ```
 $(document).ready(function() {
     var audiolizer = $("#canvas").audiolizer({
@@ -39,3 +39,9 @@ $(document).ready(function() {
         }
     });
 ```
+Now you can play audio by calling `playOrPause()` on the returned object. In this example, I'll use a button to fire it off.
+```
+$('#playBtn').click(function() {
+    audiolizer.playOrPause();
+});
+```    
