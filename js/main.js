@@ -1,5 +1,6 @@
 $(document).ready(function() {
     var audiolizer = $("#canvas").audiolizer({
+        defaultAudioUrl: 'movements.mp3',
         onStart: function() {
             $('#playBtn').text('Pause');
         },

@@ -153,10 +153,13 @@ SOFTWARE.
         }
 
         function playSound() {
-            if (!this.buffer) {
-                loadSoundFromUrl('Bird.mp3', playSound);
+            if (!this.buffer && settings.defaultAudioUrl) {
+                loadSoundFromUrl(settings.defaultAudioUrl, playSound);
+                return;
+            } else if (!this.buffer) {
                 return;
             }
+
             if (state == STATE_PLAY) {
                 state = STATE_STOP;
                 sourceNode.stop();
@@ -237,15 +240,13 @@ SOFTWARE.
                 var x = settings.width/2 + (settings.radius * 3/4 + length) * Math.cos(angle);
                 var y = settings.width/2 + (settings.radius * 3/4 + length) * Math.sin(angle);
                 points.push({'x': x, 'y': y});
-                // ctx.beginPath();
-                // ctx.fillStyle="white";
-                // ctx.fillRect(x, y, 4, 4);
-                // ctx.stroke();
             }
+
             ctx.beginPath();
             ctx.strokeStyle = settings.lineColor;
             ctx.lineWidth = 2;
             ctx.moveTo(points[0].x, points[0].y);
+
             for (var i = 1; i < points.length-2; i++) {
                 var xc = (points[i].x + points[i + 1].x) / 2;
                 var yc = (points[i].y + points[i + 1].y) / 2;
