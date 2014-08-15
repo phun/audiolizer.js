@@ -12,6 +12,9 @@ $(document).ready(function() {
         },
         onEnd: function() {
             $('#playBtn').text('Play');
+        },
+        onLoad: function() {
+            $('#playBtn').text('Loading');
         }
     });
 

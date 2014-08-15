@@ -50,7 +50,7 @@ SOFTWARE.
             onPause: null,
             // Callback for when a song ends
             onEnd: null,
-            // TODO: Callback for when a song is still being loaded
+            // Callback for when a song is still being loaded
             onLoad: null
         }, options );
 
@@ -99,24 +99,20 @@ SOFTWARE.
             analyser.connect(window.javascriptNode);
         }
 
-        function loadFromUrl(url, callback) {
+        function loadFromUrl(url, play) {
             var request = new XMLHttpRequest();
 
             request.open('GET', url, true);
             request.responseType = 'arraybuffer';
             request.onload = function() {
-                context.decodeAudioData(request.response, function(buffer) {
-                    audioBuffer = buffer;
-                    if (callback) {
-                        callback();
-                    }
-                }, onError);
+                loadAudioData(request.response, play);
             }
             request.send();
         }
 
         function loadAudioData(buffer, play) {
             if (context.decodeAudioData) {
+                if (settings.onLoad) settings.onLoad();
                 context.decodeAudioData(buffer, function(b) {
                     audioBuffer = b;
                     startOffset = 0;
@@ -147,7 +143,7 @@ SOFTWARE.
 
         function playSound() {
             if (!audioBuffer && settings.defaultAudioUrl) {
-                loadFromUrl(settings.defaultAudioUrl, playSound);
+                loadFromUrl(settings.defaultAudioUrl, true);
                 return;
             } else if (!audioBuffer) {
                 return;
@@ -168,10 +164,6 @@ SOFTWARE.
             if (settings.onResume) {
                 settings.onResume();
             }
-        }
-
-        function onError(e) {
-            console.log(e);
         }
 
         window.javascriptNode.onaudioprocess = function() {
