@@ -50,7 +50,7 @@ SOFTWARE.
             onPause: null,
             // Callback for when a song ends
             onEnd: null,
-            // Callback for when a song is still being loaded
+            // TODO: Callback for when a song is still being loaded
             onLoad: null
         }, options );
 
@@ -72,10 +72,8 @@ SOFTWARE.
         var startOffset = 0;
         var startTime = 0;
 
-        // get the context from the canvas to draw on
         var ctx = this.get()[0].getContext("2d");
 
-        // load the sound
         setupAudioNodes();
 
         function createAudioContext() {
@@ -87,38 +85,27 @@ SOFTWARE.
         }
 
         function setupAudioNodes() {
-
-            // setup a javascript node
             window.javascriptNode = context.createScriptProcessor(2048, 1, 1);
-            // connect to destination, else it isn't called
             window.javascriptNode.connect(context.destination);
 
-
-            // setup a analyzer
             analyser = context.createAnalyser();
             analyser.smoothingTimeConstant = 0.5;
             analyser.fftSize = fftSize;
 
-            // create a buffer source node
             sourceNode = context.createBufferSource();
             sourceNode.connect(analyser);
-            analyser.connect(window.javascriptNode);
-
             sourceNode.connect(context.destination);
+
+            analyser.connect(window.javascriptNode);
         }
 
-        // load the specified sound
-        function loadSoundFromUrl(url, callback) {
+        function loadFromUrl(url, callback) {
             var request = new XMLHttpRequest();
+
             request.open('GET', url, true);
             request.responseType = 'arraybuffer';
-
-            // When loaded decode the data
             request.onload = function() {
-
-                // decode the data
                 context.decodeAudioData(request.response, function(buffer) {
-                    // when the audio is decoded play the sound
                     audioBuffer = buffer;
                     if (callback) {
                         callback();
@@ -153,15 +140,14 @@ SOFTWARE.
                 startOffset += context.currentTime - startTime;
                 sourceNode.stop(startOffset);
                 state = STATE_PAUSE;
-                if (settings.onPause) {
-                    settings.onPause();
-                }
+
+                if (settings.onPause) settings.onPause();
             }
         }
 
         function playSound() {
             if (!audioBuffer && settings.defaultAudioUrl) {
-                loadSoundFromUrl(settings.defaultAudioUrl, playSound);
+                loadFromUrl(settings.defaultAudioUrl, playSound);
                 return;
             } else if (!audioBuffer) {
                 return;
@@ -184,25 +170,17 @@ SOFTWARE.
             }
         }
 
-        // log if an error occurs
         function onError(e) {
             console.log(e);
         }
 
-        // when the javascript node is called
-        // we use information from the analyzer node
-        // to draw the volume
         window.javascriptNode.onaudioprocess = function() {
+            var freqDomain = new Uint8Array(analyser.frequencyBinCount),
+                timeDomain = new Uint8Array(analyser.frequencyBinCount);
 
-            // Analyzer uses FFT to analyze all fo the frequencies real time
-            // frequency bin count is basically the number of frequencies it's analyzing
-            var freqDomain =  new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(freqDomain);
-            var timeDomain = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteTimeDomainData(timeDomain);
 
-
-            // clear the current state
             ctx.clearRect(0, 0, settings.width, settings.width);
 
             ctx.beginPath();
@@ -212,22 +190,26 @@ SOFTWARE.
             ctx.strokeStyle = settings.circleColor;
             ctx.lineWidth = 0;
             ctx.stroke();
+
             drawSpectrum(freqDomain);
             drawTimeSpectrum(timeDomain);
         }
 
         function drawSpectrum(array) {
-            var cut = getAvg(array) * 2/3;
             for (var i = 0; i < (array.length/8-32); i++) {
-                var value = array[i*8+16] - cut;
+                var cut = getAvg(array) * 2/3,
+                    value = array[i*8+16] - cut;
+
                 if (value < 0) value = 0;
-                var percent = value / (256 - cut);
-                var angle = (2*Math.PI/(array.length/8-32)) * (i+1);
-                var cx = settings.width/2 + settings.radius * Math.cos(angle);
-                var cy = settings.width/2 + settings.radius * Math.sin(angle);
-                var length = settings.width * 0.15 * percent;
-                var x = cx + (length) * Math.cos(angle);
-                var y = cy + (length) * Math.sin(angle);
+
+                var percent = value / (256 - cut),
+                    angle = (2*Math.PI/(array.length/8-32)) * (i+1),
+                    cx = settings.width/2 + settings.radius * Math.cos(angle),
+                    cy = settings.width/2 + settings.radius * Math.sin(angle),
+                    length = settings.width * 0.15 * percent,
+                    x = cx + (length) * Math.cos(angle),
+                    y = cy + (length) * Math.sin(angle);
+
                 ctx.beginPath();
                 ctx.strokeStyle = settings.barColor;
                 ctx.lineWidth = settings.width * 0.018;
@@ -240,12 +222,13 @@ SOFTWARE.
         function drawTimeSpectrum(array) {
             var points = [];
             for (var i = 0; i < (array.length); i++) {
-                var value = array[i];
-                var percent = value / 256;
-                var angle = (2*Math.PI/array.length) * (i+1);
-                var length = settings.radius/2 * percent;
-                var x = settings.width/2 + (settings.radius * 3/4 + length) * Math.cos(angle);
-                var y = settings.width/2 + (settings.radius * 3/4 + length) * Math.sin(angle);
+                var value = array[i],
+                    percent = value / 256,
+                    angle = (2*Math.PI/array.length) * (i+1),
+                    length = settings.radius/2 * percent,
+                    x = settings.width/2 + (settings.radius * 3/4 + length) * Math.cos(angle),
+                    y = settings.width/2 + (settings.radius * 3/4 + length) * Math.sin(angle);
+
                 points.push({'x': x, 'y': y});
             }
 
@@ -255,16 +238,17 @@ SOFTWARE.
             ctx.moveTo(points[0].x, points[0].y);
 
             for (var i = 1; i < points.length-2; i++) {
-                var xc = (points[i].x + points[i + 1].x) / 2;
-                var yc = (points[i].y + points[i + 1].y) / 2;
+                var xc = (points[i].x + points[i + 1].x) / 2,
+                    yc = (points[i].y + points[i + 1].y) / 2;
+
                 ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
             }
-            // curve through the last two points
+
+            // Connect the circle
             ctx.quadraticCurveTo(points[i].x, points[i].y, points[i+1].x,points[i+1].y);
             ctx.quadraticCurveTo(points[i+1].x, points[i+1].y, points[0].x,points[0].y);
             ctx.stroke();
         }
-
 
         return {
             playOrPause: function() {
