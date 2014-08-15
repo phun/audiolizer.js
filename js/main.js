@@ -27,11 +27,7 @@ $(document).ready(function() {
 
         var reader = new FileReader();
         reader.onload = function(e) {
-            if (context.decodeAudioData) {
-                context.decodeAudioData(e.target.result,function(buffer) {
-                    audiolizer.loadAudio(buffer, true);
-                });
-            }
+            audiolizer.loadAudioData(e.target.result, true);
         }
 
         reader.readAsArrayBuffer(e.dataTransfer.files[0]);

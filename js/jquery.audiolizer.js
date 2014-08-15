@@ -121,12 +121,16 @@ SOFTWARE.
             request.send();
         }
 
-        function loadSound(buffer, play) {
-            this.buffer = buffer;
-            startOffset = 0;
-            startTime = 0;
+        function loadAudioData(buffer, play) {
+            if (context.decodeAudioData) {
+                context.decodeAudioData(buffer, function(b) {
+                    this.buffer = b;
+                    startOffset = 0;
+                    startTime = 0;
 
-            if (play) playSound(); 
+                    if (play) playSound(); 
+                });
+            }
         }
 
         function playOrPause() {
@@ -258,8 +262,8 @@ SOFTWARE.
             playOrPause: function() {
                 playOrPause();
             },
-            loadAudio: function(buffer, play) {
-                loadAudio(buffer, play);
+            loadAudioData: function(buffer, play) {
+                loadAudioData(buffer, play);
             }
         }
     }
