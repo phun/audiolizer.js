@@ -61,7 +61,7 @@ SOFTWARE.
             STATE_PAUSE = 2,
             STATE_STOP = 0;
 
-        var context = new AudioContext();
+        var context = createAudioContext();
         var audioBuffer;
         var analyser;
         var javascriptNode;
@@ -77,6 +77,14 @@ SOFTWARE.
 
         // load the sound
         setupAudioNodes();
+
+        function createAudioContext() {
+            if ('webkitAudioContext' in window) {
+               return new webkitAudioContext();
+            } else if ('AudioContext' in window) {
+                return new AudioContext();
+            }
+        }
 
         function setupAudioNodes() {
 
@@ -111,8 +119,7 @@ SOFTWARE.
                 // decode the data
                 context.decodeAudioData(request.response, function(buffer) {
                     // when the audio is decoded play the sound
-                    this.buffer = buffer;
-                    console.log(callback);
+                    audioBuffer = buffer;
                     if (callback) {
                         callback();
                     }
@@ -124,7 +131,7 @@ SOFTWARE.
         function loadAudioData(buffer, play) {
             if (context.decodeAudioData) {
                 context.decodeAudioData(buffer, function(b) {
-                    this.buffer = b;
+                    audioBuffer = b;
                     startOffset = 0;
                     startTime = 0;
 
@@ -143,8 +150,8 @@ SOFTWARE.
 
         function pauseSound() { 
             if (state == STATE_PLAY) {
-                sourceNode.stop();
                 startOffset += context.currentTime - startTime;
+                sourceNode.stop(startOffset);
                 state = STATE_PAUSE;
                 if (settings.onPause) {
                     settings.onPause();
@@ -153,10 +160,10 @@ SOFTWARE.
         }
 
         function playSound() {
-            if (!this.buffer && settings.defaultAudioUrl) {
+            if (!audioBuffer && settings.defaultAudioUrl) {
                 loadSoundFromUrl(settings.defaultAudioUrl, playSound);
                 return;
-            } else if (!this.buffer) {
+            } else if (!audioBuffer) {
                 return;
             }
 
@@ -166,11 +173,11 @@ SOFTWARE.
             }
             startTime = context.currentTime;
             sourceNode = context.createBufferSource();
-            sourceNode.buffer = this.buffer;
+            sourceNode.buffer = audioBuffer;
             sourceNode.connect(analyser);
             sourceNode.connect(context.destination);
             // Start playback, but make sure we stay in bound of the buffer.
-            sourceNode.start(0, startOffset % buffer.duration);
+            sourceNode.start(0, startOffset % audioBuffer.duration);
             state = STATE_PLAY;
             if (settings.onResume) {
                 settings.onResume();
