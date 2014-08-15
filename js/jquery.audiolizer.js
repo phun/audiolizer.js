@@ -38,6 +38,9 @@ SOFTWARE.
             // These are the defaults.
             fftSize: 1024 * 2,
             width: this.width(),
+            circleColor: 'black',
+            barColor: 'black',
+            lineColor: 'white',
 
             // Callback for when a song is starting  
             onStart: null,
@@ -118,10 +121,12 @@ SOFTWARE.
             request.send();
         }
 
-        function loadSound(buffer) {
+        function loadSound(buffer, play) {
             this.buffer = buffer;
             startOffset = 0;
             startTime = 0;
+
+            if (play) playSound(); 
         }
 
         function playOrPause() {
@@ -160,7 +165,6 @@ SOFTWARE.
             // Start playback, but make sure we stay in bound of the buffer.
             sourceNode.start(0, startOffset % buffer.duration);
             state = STATE_PLAY;
-            console.log("playing");
             if (settings.onResume) {
                 settings.onResume();
             }
@@ -189,9 +193,9 @@ SOFTWARE.
 
             ctx.beginPath();
             ctx.arc(settings.width/2, settings.width/2, settings.radius, 0, 2 * Math.PI, false);
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = settings.circleColor;
             ctx.fill();
-            ctx.strokeStyle = 'black';
+            ctx.strokeStyle = settings.circleColor;
             ctx.lineWidth = 0;
             ctx.stroke();
             drawSpectrum(freqDomain);
@@ -211,7 +215,7 @@ SOFTWARE.
                 var x = cx + (length) * Math.cos(angle);
                 var y = cy + (length) * Math.sin(angle);
                 ctx.beginPath();
-                ctx.strokeStyle = "black";
+                ctx.strokeStyle = settings.barColor;
                 ctx.lineWidth = settings.width * 0.018;
                 ctx.moveTo(cx, cy);
                 ctx.lineTo(x, y);
@@ -235,7 +239,7 @@ SOFTWARE.
                 // ctx.stroke();
             }
             ctx.beginPath();
-            ctx.strokeStyle = "white";
+            ctx.strokeStyle = settings.lineColor;
             ctx.lineWidth = 2;
             ctx.moveTo(points[0].x, points[0].y);
             for (var i = 1; i < points.length-2; i++) {
@@ -250,31 +254,12 @@ SOFTWARE.
         }
 
 
-        //add the drop event handlers
-        document.addEventListener('dragover',function(e){
-            e.preventDefault();
-        });
-        document.addEventListener('drop',function(e) {
-            console.log('dropped');
-            e.preventDefault();
-            //create the file reader to read the audio file dropped
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                if(context.decodeAudioData) {
-                //decode the audio data
-                    context.decodeAudioData(e.target.result,function(buffer) {
-                        loadSound(buffer);
-                        playSound();
-                    });
-                }
-            }
-            //read the file
-            reader.readAsArrayBuffer(e.dataTransfer.files[0]);
-        });
-
         return {
             playOrPause: function() {
                 playOrPause();
+            },
+            loadAudio: function(buffer, play) {
+                loadAudio(buffer, play);
             }
         }
     }
