@@ -61,20 +61,15 @@ SOFTWARE.
             STATE_PAUSE = 2,
             STATE_STOP = 0;
 
-        var context = createAudioContext();
-        var audioBuffer;
-        var analyser;
-        var javascriptNode;
-        var fftSize = 1024 * 2;
-        var state = STATE_STOP;
+        var context = createAudioContext(),
+            audioBuffer,
+            analyser,
+            javascriptNode,
+            state = STATE_STOP,
+            startOffset = 0,
+            startTime = 0,
+            ctx = this.get()[0].getContext("2d");
 
-        // Used to pause and play the media file
-        var startOffset = 0;
-        var startTime = 0;
-
-        var ctx = this.get()[0].getContext("2d");
-
-        setupAudioNodes();
 
         function createAudioContext() {
             if ('webkitAudioContext' in window) {
@@ -87,10 +82,11 @@ SOFTWARE.
         function setupAudioNodes() {
             window.javascriptNode = context.createScriptProcessor(2048, 1, 1);
             window.javascriptNode.connect(context.destination);
+            window.javascriptNode.onaudioprocess = function() { draw(); };
 
             analyser = context.createAnalyser();
             analyser.smoothingTimeConstant = 0.5;
-            analyser.fftSize = fftSize;
+            analyser.fftSize = settings.fftSize;
 
             sourceNode = context.createBufferSource();
             sourceNode.connect(analyser);
@@ -176,14 +172,14 @@ SOFTWARE.
             }
         }
 
-        window.javascriptNode.onaudioprocess = function() {
+        function draw() {
             var freqDomain = new Uint8Array(analyser.frequencyBinCount),
                 timeDomain = new Uint8Array(analyser.frequencyBinCount);
 
             analyser.getByteFrequencyData(freqDomain);
             analyser.getByteTimeDomainData(timeDomain);
 
-            ctx.clearRect(0, 0, settings.width, settings.width);
+            clearCanvas();
 
             ctx.beginPath();
             ctx.arc(settings.width/2, settings.width/2, settings.radius, 0, 2 * Math.PI, false);
@@ -195,6 +191,11 @@ SOFTWARE.
 
             drawSpectrum(freqDomain);
             drawTimeSpectrum(timeDomain);
+        }
+
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, settings.width, settings.width);
         }
 
         function drawSpectrum(array) {
@@ -251,6 +252,8 @@ SOFTWARE.
             ctx.quadraticCurveTo(points[i+1].x, points[i+1].y, points[0].x,points[0].y);
             ctx.stroke();
         }
+
+        setupAudioNodes();
 
         return {
             playOrPause: function() {
